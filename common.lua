@@ -23,6 +23,7 @@ local transitionData = require "sceneTransitionData"
 local dragStartY = 0  
 local dragStartTime = 0  
 local speedLimit = 3000
+local dragMultiplier = 0.5
 local currentScene
 local completedScene
 local storyboard
@@ -184,9 +185,9 @@ local function fblistener( event )
                         local attachment = {
                                 name = "Come and play Tiddly Flicks too!",
                                 link = "http://www.appappnaway.co.uk/tiddly-flicks",
-                                description = "What do you get if you cross a retro platform video game with a classic board game?  TIDDLY FLICKS!",
-                                picture = "http://www.appappnaway.co.uk/images/tiddly-icon.png",
-                                message = "Tiddly Flicks - play it now on Android, iPhone and iPad"
+                                description = "What do you get if you cross a retro platform video game with a classic board game?  TIDDLY FLICKS! Play it now on Android, iPhone and iPad",
+                                picture = "http://www.appappnaway.co.uk/images/Icon290.png",
+                                message = "I just completed level " .. levelIndex .. " on Tiddly Flicks"
                         }
                 
 		facebook.request( "me/feed", "POST", attachment )
@@ -476,12 +477,13 @@ t.drag = function( event )
 				local xProportion = math.cos(angle/57.3)
 				local yProportion = math.sin(angle/57.3)
 
+				print("Using drag multiplier " .. dragMultiplier)
 				print(xProportion)
-						print(yProportion)
+				print(yProportion)
 
 
-	    			local xVelocity = maxSpeed * xProportion * 0.5
-	    			local yVelocity = maxSpeed * yProportion * -0.5
+	    			local xVelocity = maxSpeed * xProportion * dragMultiplier
+	    			local yVelocity = maxSpeed * yProportion * -dragMultiplier
     	    			activeWink:setLinearVelocity(xVelocity , yVelocity) 
 				print("setting wink speed as x: " .. xVelocity .. " y: " .. yVelocity)
 	    			activeWink.angularVelocity = maxSpeed * -1
@@ -583,6 +585,12 @@ end
 -- what to do when the screen loads
 t.createSceneCommon  = function(screenGroup, floorLength, thisScene, notUsed, storyB, useBigPot)
 	print("creating scene objects")
+
+	if string.sub(system.getInfo("model"),1,3) == "iPh" then
+		print("iPhone")
+		dragMultiplier = 0.35
+	end
+
 	utility.playSoundWithOptions(backgroundNoise, {loops=-1})
 	resetLevel()
 	helpText = display.newText("", 0, 350, "GoodDog", 50)
