@@ -14,6 +14,7 @@ local training = require "training"
 local myRevMob = require "myRevMob"
 local math = require "math"
 local translations = require "translations"
+local gameNoise = audio.loadSound("sounds/country_sounds.mp3")
 
 local playButton
 local howToPlayButton
@@ -24,6 +25,7 @@ local ad
 local leftHanded
 local rightHanded
 local merchandise
+local achievements
 
 local backgroundNoise = audio.loadSound("sounds/menu_music.mp3")
 
@@ -130,30 +132,35 @@ function scene:createScene(event)
 
 	soundOnIcon = utility.loadImage("soundOn.png") 
 	utility.centreObjectX(soundOnIcon)
-	soundOnIcon:translate(0, 501)
+	soundOnIcon:translate(100, 501)
 	screenGroup:insert(soundOnIcon)
 
 	soundOffIcon = utility.loadImage("soundOff.png") 
 	utility.centreObjectX(soundOffIcon)
-	soundOffIcon:translate(0, 500)
+	soundOffIcon:translate(100, 500)
 	screenGroup:insert(soundOffIcon)
 	soundOffIcon:toBack()
 
 	leftHanded = utility.loadImage("leftHanded.png") 
 	utility.centreObjectX(leftHanded)
-	leftHanded:translate(-200, 500)
+	leftHanded:translate(-100, 500)
 	screenGroup:insert(leftHanded)
 	leftHanded:toBack()
 
 	rightHanded = utility.loadImage("rightHanded.png") 
 	utility.centreObjectX(rightHanded)
-	rightHanded:translate(-200, 500)
+	rightHanded:translate(-100, 500)
 	screenGroup:insert(rightHanded)
 
 	merchandise = utility.loadImage("merchandise.png") 
 	utility.centreObjectX(merchandise)
-	merchandise:translate(200, 500)
+	merchandise:translate(300, 500)
 	screenGroup:insert(merchandise)
+
+	achievements = utility.loadImage("achievements.png") 
+	utility.centreObjectX(achievements)
+	achievements:translate(-300, 500)
+	screenGroup:insert(achievements)
 
 	if utility.willPlaySounds() == false then
 		soundOnIcon:toBack()
@@ -205,6 +212,12 @@ local function goToMerchandise(event)
 	end
 end
 
+local function goToAchievements(event)
+	if event.phase == "began" then
+		storyboard.gotoScene( "achievements") 
+	end
+end
+
 function scene:enterScene(event)
 	storyboard.purgeScene(transitionData.currentScene)
 	playButton:addEventListener("touch", doPlay)
@@ -213,7 +226,8 @@ function scene:enterScene(event)
 	credits:addEventListener("touch", showCredits) 
 	soundOnIcon:addEventListener("touch", toggleSound) 
 	merchandise:addEventListener("touch", goToMerchandise)  
- 
+ 	achievements:addEventListener("touch", goToAchievements)  
+
 	rightHanded:addEventListener("touch", toggleHand)
 	print("entering Menu")
 	utility.stopSound()
@@ -232,15 +246,7 @@ function scene:enterScene(event)
 		native.showAlert( "Tiddly values your opinion", "Would you like to rate him?", { "Sure!", "Maybe later" }, doRateApp )
 	elseif myRevMob.isAdAvailable() then
 		print("not first scene")
-
-		local random = math.random(3)
-		print(random)
-
-		if random == 3 then
-			print("loading")
-
-			native.showAlert( "FREE GAME FROM OUR PARTNER", "Would you like to try another cool free game?  This may take a few moments to connect", { "Sure!", "No thanks" }, goToGameLink )
-		end
+		native.showAlert( "FREE GAME FROM OUR PARTNER", "Would you like to try another cool free game?  This may take a few moments to connect", { "Sure!", "No thanks" }, goToGameLink )
 	end
 
 	translations.setLanguage("en")
@@ -253,6 +259,8 @@ function scene:exitScene(event)
 	soundOnIcon:removeEventListener("touch", toggleSound) 
 	rightHanded:removeEventListener("touch", toggleHand)
 	merchandise:removeEventListener("touch", goToMerchandise)  
+	achievements:removeEventListener("touch", goToAchievements)  
+
 end
 
 function scene:destroyScene(event)

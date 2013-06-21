@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------------
 --
--- level1.lua
+-- level55.lua
 --
 -----------------------------------------------------------------------------------------
 
@@ -14,7 +14,7 @@ local utility = require ("utility")
 function scene:createScene(event)
 	local screenGroup = self.view
 	common.createSceneCommon(screenGroup, 800, "level55", "level1", storyboard, true)
-	common.setHelpText("TIP: the faster you swipe", "the further Tiddly travels")
+	common.setHelpText("TIP: the further you flick", "the further Tiddly travels")
 end
 
 -- add all the event listening

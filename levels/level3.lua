@@ -18,7 +18,7 @@ function scene:createScene(event)
 	local barrier = utility.addWood(250, 450, screenGroup)
 	barrier:toBack()
 	background:toBack()
-	common.setHelpText("TIP: Swipe down from the bottom of", "the face for a steep trajectory")
+	common.setHelpText("TIP: Flick down from the bottom of", "the face for a steep trajectory")
 
 end
 

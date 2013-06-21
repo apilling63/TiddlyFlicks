@@ -13,7 +13,6 @@ local persistent = require "persistent"
 local utility = require "utility"  
 local math = require "math"  
 local training = require "training"
-local facebook = require "facebook"
 local levelMappings = require "levelMappings"
 local json = require("json")
 
@@ -22,8 +21,7 @@ local transitionData = require "sceneTransitionData"
 
 local dragStartY = 0  
 local dragStartTime = 0  
-local speedLimit = 3000
-local dragMultiplier = 0.5
+local dragMultiplier = 0.7
 local currentScene
 local completedScene
 local storyboard
@@ -46,7 +44,6 @@ local metal = audio.loadSound("sounds/metal.wav")
 local outOfBounds = false
 local screenGp
 local levelCompleted = false
-local trainingButton
 local numStars
 local levelIndex
 local staticStart = 20
@@ -55,15 +52,56 @@ local staticEnd = 320
 local helpText
 local helpText2
 
+local angleText
+local speedText
+local swipeCircle
+local previousY
+local angle = 180
+local dragStartY
+
+local function goToNext()
+	storyboard.gotoScene(transitionData.nextScene) 
+end
+
+local function fadeSpeedAndAngleText(event)
+	if speedText.alpha > 0 then
+
+		if speedText.alpha < 0.01 then
+			speedText.alpha = 0
+		else
+			speedText.alpha = speedText.alpha - 0.005
+		end
+	end
+
+	if angleText.alpha > 0 then
+		if angleText.alpha < 0.01 then
+			angleText.alpha = 0
+		else
+			angleText.alpha = angleText.alpha - 0.005
+
+		end
+	end
+end
+
 local function fadeHelpText(event)
 	if helpText and helpText.alpha > 0 then
 		helpText:toFront()
-		helpText.alpha = helpText.alpha - 0.002
+
+		if helpText.alpha < 0.004 then
+			helpText.alpha = 0
+		else
+			helpText.alpha = helpText.alpha - 0.002
+		end
 	end
 
 	if helpText2 and helpText2.alpha > 0 then
 		helpText2:toFront()
-		helpText2.alpha = helpText2.alpha - 0.002
+
+		if helpText2.alpha < 0.004 then
+			helpText2.alpha = 0
+		else
+			helpText2.alpha = helpText2.alpha - 0.002
+		end
 	end
 end
 
@@ -78,30 +116,12 @@ t.setHelpText = function(text1, text2)
 	screenGp:insert(helpText2)
 end
 
-local function moveFinger(event)
-	local finger = staticWink.finger
-
-	if finger.isVisible then
-		if finger.y < 470 then
-			finger.y = finger.y + 4
-		else
-			finger.y = 220
-		end
-	end
-end
-
 local function resetLevel() 
-	-- reset level values
-	--doDecrement = true
 	outOfBounds = false
 	levelCompleted = false
 
 	waitingToRestart = 0
-	windSpeed = 0
 	numFlicks = 0
-
-	-- reset gravity
-	physics.setGravity(0, 9.81)
 
 	flicksPerStar = {}
 	flicksPerStar.two = 4
@@ -112,6 +132,7 @@ local function addStar(xLocation, isLit)
 	utility.playSound(woosh)
 
 	print("adding star at " .. xLocation)
+
 	if isLit then
 		star = utility.loadImage("yellowStar.png") 
 	else 
@@ -134,114 +155,6 @@ end
 
 local function addStarThree()
 	addStar((display.contentWidth / 2) + 100, numStars > 2)
-end
-
-local function levelChangeCommon()
-	background:toFront()
-	background.alpha = 0.9
-	outOfBoundsText:toFront()
-	--outOfBoundsText:setTextColor(0,0,0)
-
-	for i=1,#clouds do
-		table.remove(clouds, i)
-	end
-
-	for i=1,#cans do
-		table.remove(cans, i)
-	end
-
-	for i=1,#wasps do
-		table.remove(wasps, i)
-	end
-
-	for i=1,#ants do
-		table.remove(ants, i)
-	end
-
-	for i=1,#movingPlatformsX do
-		table.remove(movingPlatformsX, i)
-	end
-
-	for i=1,#movingPlatformsY do
-		table.remove(movingPlatformsY, i)
-	end
-
-	for i=1,#conveyerBelts do
-		table.remove(conveyerBelts, i)
-	end
-end
-
-local function returnToMenu()
-	print("return to menu")
-	transitionData.currentScene = currentScene
-	transitionData.nextScene = "menu1"
-	storyboard.gotoScene("menu1") 
-end
-
-local function fblistener( event )
-    if ( "session" == event.type ) then
-        -- upon successful login, post the message
-        if ( "login" == event.phase ) then
-                        local attachment = {
-                                name = "Come and play Tiddly Flicks too!",
-                                link = "http://www.appappnaway.co.uk/tiddly-flicks",
-                                description = "What do you get if you cross a retro platform video game with a classic board game?  TIDDLY FLICKS! Play it now on Android, iPhone and iPad",
-                                picture = "http://www.appappnaway.co.uk/images/Icon290.png",
-                                message = "I just completed level " .. levelIndex .. " on Tiddly Flicks"
-                        }
-                
-		facebook.request( "me/feed", "POST", attachment )
-        end
-    elseif ( "request" == event.type ) then
-        -- event.response is a JSON object from the FB server
-        local response = event.response
-        print( response )
-    end
-end
-
-
-
-local function unlock1(event)
-	if "clicked" == event.action then
-
-        	local i = event.index
-
-	        if 1 == i then
-			local closure1 = function()
-				storyboard.gotoScene(transitionData.nextScene) 
-			end
-
-			local closure = function()
-				training.purchase(1, closure1)
-			end
-			
-			timer.performWithDelay(10, closure)
-		else
-			returnToMenu()
-		end
-	end
-end
-
-local function confirmContactFaceBook(event)
-	if "clicked" == event.action then
-
-        	local i = event.index
-
-	        if 1 == i then
-			-- first argument is the app id that you get from Facebook
-			facebook.login( "151025625078894", fblistener, {"publish_stream"} )
-		end
-
-		storyboard.gotoScene(transitionData.nextScene)
-	end
-end
-
-local function goToTraining(event)
-	if "began" == event.phase then
-		transitionData.currentScene = currentScene
-		transitionData.nextScene = "trainingScene"
-		storyboard.gotoScene("trainingScene")  
-	end
 end
 
 local function moveOutOfBoundsText()
@@ -275,38 +188,68 @@ local function moveOutOfBoundsText()
 	
 end
 
+local function levelChangeCommon()
+	local hasEarnedBadge = utility.completedOrFailedToEarnBadge(levelCompleted, levelIndex)
+
+	background:toFront()
+	background.alpha = 0.9
+	outOfBoundsText:toFront()
+	Runtime:addEventListener("enterFrame", moveOutOfBoundsText)
+
+	return hasEarnedBadge
+end
+
+local function returnToMenu()
+	print("return to menu")
+	transitionData.currentScene = currentScene
+	transitionData.nextScene = "menu1"
+	storyboard.gotoScene("menu1") 
+end
+
+local function unlock1(event)
+	if "clicked" == event.action then
+
+        	local i = event.index
+
+	        if 1 == i then
+
+			local closure = function()
+				training.purchase(1, goToNext)
+			end
+			
+			timer.performWithDelay(10, closure)
+		else
+			returnToMenu()
+		end
+	end
+end
+
 local function hitHazard(text)
 	if waitingToRestart == 0 then
 		activeWink.isVisible = false
 		activeWink.name = "donotuse"
-		utility.playSound(ouch)
 		waitingToRestart = 1 
 		print("hit hazard")
 		outOfBounds = true
 
 		outOfBoundsText.text = text
 		levelChangeCommon()
-
-		Runtime:addEventListener("enterFrame", moveOutOfBoundsText)
 	end
 end
 
 local function hitWasp()
+	utility.playSound(ouch)
 	hitHazard("TIDDLY GOT STUNG!!")
 end
 
 local function hitBolt()
+	utility.playSound(ouch)
 	hitHazard("TIDDLY GOT SHOCKED!!")
 end
 
 local function goneOutOfBounds()
 	utility.playSound(ohNo)
-	waitingToRestart = 1 
-	print("wink out of bounds")
-	outOfBounds = true
-	outOfBoundsText.text = "OUT OF BOUNDS!!"
-	levelChangeCommon()
-	Runtime:addEventListener("enterFrame", moveOutOfBoundsText)
+	hitHazard("OUT OF BOUNDS!!")
 end
 
 local function insertStars()
@@ -321,39 +264,20 @@ local function insertStars()
 	end
 end
 
-local function promptFacebook()
-
-	if levelIndex == 32 and utility.hasUnlocked1() == false then
-		utility.playSound(applause)
-		native.showAlert( "TIDDLY MASTER!!", "Congratulations upon completing the first 32 levels of Tiddly Flicks Escape from the Country - you're a true Tiddly Master! Continue the fun by unlocking some more levels", { "Unlock", "Maybe later" }, unlock1 )
-	else
-		local random = math.random(3)
-
-		print("random number is " .. random)
-
-		if random > 1 then
-			storyboard.gotoScene(transitionData.nextScene) 
-		else 
-			native.showAlert( "Facebook", "Post your progress on Facebook!", { "Sure!", "No thanks" }, confirmContactFaceBook )
-		end
-	end
-end
-
 local function levelComplete()
 	utility.playSound(yes)
 	utility.playSound(applause)
 
 	outOfBoundsText.text = "A TIDDLY TRIUMPH!!"
-	levelChangeCommon()
+	levelCompleted = true
+
+	local hasAchieved2 = levelChangeCommon()
 
 	transitionData.currentScene = currentScene 
 	transitionData.nextScene = completedScene 
 	
 	menuButton.isVisible = false
 	restartButton.isVisible = false
-
-	levelCompleted = true
-	Runtime:addEventListener("enterFrame", moveOutOfBoundsText)
 
 	if numFlicks <= flicksPerStar.three then
 		numStars = 3
@@ -365,9 +289,6 @@ local function levelComplete()
 
 	insertStars()
 
-	-- always start a new level unsimplified
-	transitionData.isLevelSimplified = false
-
 	timer.performWithDelay(2000, addStarOne)
 	timer.performWithDelay(2300, addStarTwo)
 	timer.performWithDelay(2600, addStarThree)
@@ -377,12 +298,51 @@ local function levelComplete()
 		utility.centreObjectX(goToNextText)
 		screenGp:insert(goToNextText)
 		utility.playSound(ding)
+			
+		if levelIndex == 32 and utility.hasUnlocked1() == false then
+			utility.playSound(applause)
+			native.showAlert( "TIDDLY MASTER!!", "Congratulations upon completing the first 32 levels of Tiddly Flicks Escape from the Country - you're a true Tiddly Master! Continue the fun by unlocking some more levels", { "Unlock", "Maybe later" }, unlock1 )
+		else
+			if levelIndex % 4 == 0 and utility.hasPosted(levelIndex) == false then
+                		--utility.postToFacebook("I just completed level " .. levelIndex .. " on Tiddly Flicks", levelIndex)
+			end
+			
+			local hasAchieved = false
+			
+			if numFlicks == 1 then
+				hasAchieved = utility.hasEarnedBadgesWithHoleInOne()
+			end
+
+			if hasAchieved or hasAchieved2 then
+				local achievementPic = utility.loadImage("achievements.png")
+				screenGp:insert(achievementPic)
+				achievementPic:translate(700, 200)
+				achievementPic:setFillColor(255,255,0)
+			end
+
+			menuButton.isVisible = true
+			restartButton.isVisible = true
+			nextButton.isVisible = true
+
+			utility.centreObjectX(restartButton)
+			restartButton:translate(-150, 0)
+			restartButton.y = 500
+			restartButton:toFront()
+
+			utility.centreObjectX(menuButton)
+			menuButton.y = 500
+			menuButton:toFront()
+
+			utility.centreObjectX(nextButton)
+			nextButton:translate(150, 0)
+			nextButton.y = 500
+			nextButton:toFront()
+		
+		end
 
 	end
 
 	timer.performWithDelay(2900, closure)
-
-	timer.performWithDelay(4000, promptFacebook)
 end
 
 t.trackWink = function(event) 
@@ -392,26 +352,20 @@ t.trackWink = function(event)
 		-- not waiting for restart and the active wink has reached the target
 		print("wink in target")
 
-		if activeWink.nextWink then
-
-			-- there is another wink that has not found the target yet
-			print("still another wink")
-
-			activeWink = activeWink.nextWink
-			local colour = utility.getColour(activeWink.colour)
-			--staticWink:setFillColor(colour[1], colour[2], colour[3])
-
-		else
-			print("level complete")
-			-- this was the last wink so move to the next level
-			wink.name = "NOT IN USE"
-			levelComplete()
-		end
+		-- this was the last wink so move to the next level
+		wink.name = "NOT IN USE"
+		levelComplete()
 
 	elseif (activeWink.x > (display.contentWidth - display.screenOriginX) or activeWink.y > activeWink.yLimit or activeWink.x < display.screenOriginX or activeWink.y < - 300) and waitingToRestart == 0 and levelCompleted == false then
 		goneOutOfBounds()
     	end
 end 
+
+local function goToNextPressed(event)
+	if "began" == event.phase then
+		goToNext()
+	end 
+end
 
 local function restart()
 	transitionData.currentScene = currentScene
@@ -439,37 +393,64 @@ local function isWinkStationary()
 	return isStationary
 end
 
+local function getSpeed(startY, endY)
+	print("startY is:" .. startY .. " and endY is:" .. endY)
+	local distance = endY - startY
+
+	print("Uncapped distance is " .. distance)
+
+	if distance < 0 then
+		distance = 0
+	end
+
+	print("capped distance is " .. distance)
+
+
+	local speed = distance * 8
+	speedText.text = string.sub(speed, 1, 6) .. " mm/s"
+	speedText.alpha = 1
+
+	return speed
+end
+
 t.drag = function( event )    
 	local phase = event.phase  
 
 	if "began" == phase then  
 		print("swipe detected")
+		swiper.y = event.y - 100
 
-		-- only want a swipe to effect a change if the active wink is stationary
-		local isStationary = isWinkStationary()
-
-		if (isStationary and event.y < 290 and event.y > 20) then
-			print("valid swipe")
-
-        		-- Store initial position  
-        		dragStartY = event.y
-			dragStartTime = event.time
+		if (swiper.y < 30) then
+			swiper.y = 30
 		end
-	elseif dragStartY ~= 0 then 
-        	if "moved" == phase then  
-			-- just set the current position
-            		currentY = event.y
 
+		previousY = swiper.y
+
+	else 
+        	if "moved" == phase then  
+			swiper.y = event.y - 100
+
+			if (swiper.y < 30) then
+				swiper.y = 30
+			end
+
+			if (previousY > swiper.y and swiper.y <= 275 and swiper.y > 29) then
+				-- moving up inside the angle zone
+				angleText.text = string.sub(angle, 1, 4) .. "º"
+				angleText.alpha = 1
+				angle = 90 * (previousY - 30) / 245
+				dragStartY = previousY
+			elseif angle ~= 180 and dragStartY ~= 0 then
+				getSpeed(dragStartY, swiper.y)
+				angleText.alpha = 1
+			end
+
+			previousY = swiper.y
         	elseif "ended" == phase or "cancelled" == phase then
 			print("swipe ended")
-			local isStationary = isWinkStationary()
 
-			-- check the wink isn't moving then make it move!
-			if isStationary then
-				local distance = event.y - dragStartY
-				local time = event.time - dragStartTime
-				local maxSpeed = distance * 1000 / time
-				local angle = 90 * (dragStartY - 20) / 270
+			if angle ~= 180 then
+				local maxSpeed = getSpeed(dragStartY, event.y - 100)
 				print(dragStartY)
 				print(angle)
 				print(maxSpeed)
@@ -481,7 +462,6 @@ t.drag = function( event )
 				print(xProportion)
 				print(yProportion)
 
-
 	    			local xVelocity = maxSpeed * xProportion * dragMultiplier
 	    			local yVelocity = maxSpeed * yProportion * -dragMultiplier
     	    			activeWink:setLinearVelocity(xVelocity , yVelocity) 
@@ -490,6 +470,7 @@ t.drag = function( event )
 	    			maxSpeed = 0
 				dragStartY = 0
 				numFlicks = numFlicks + 1
+				angle = 180
 				utility.playSound(boing)
 			end
         	end  
@@ -498,17 +479,11 @@ t.drag = function( event )
     	return true  
 end  
 
-local function addDynamicObject(object, screenGroup)
-	physics.addBody(object, "dynamic", dynamicMaterial)
-	screenGroup:insert(object)
-end
-
 local function addWinkLocal(wink, colour, xLowerTarget, xUpperTarget, screenGroup, setAsActive, useBigPot)
 	print("adding a wink")
 
-	addDynamicObject(wink, screenGroup)
-
-	local potColour = utility.getColour(colour)
+	physics.addBody(wink, "dynamic", dynamicMaterial)
+	screenGroup:insert(wink)
 
 	wink.colour = colour
 	wink.yTarget = 620
@@ -586,11 +561,6 @@ end
 t.createSceneCommon  = function(screenGroup, floorLength, thisScene, notUsed, storyB, useBigPot)
 	print("creating scene objects")
 
-	if string.sub(system.getInfo("model"),1,3) == "iPh" then
-		print("iPhone")
-		dragMultiplier = 0.35
-	end
-
 	utility.playSoundWithOptions(backgroundNoise, {loops=-1})
 	resetLevel()
 	helpText = display.newText("", 0, 350, "GoodDog", 50)
@@ -618,6 +588,7 @@ t.createSceneCommon  = function(screenGroup, floorLength, thisScene, notUsed, st
 	-- picture of the wink to swipe
 	staticWink = utility.addStaticWink(screenGroup, transitionData.isLeftHanded)
 	staticWink.isVisible = false
+	staticWink.alpha = 0.8
 
 	-- default wink (we always need one)
 	wink = utility.loadImage("orangeWink.png")  
@@ -626,42 +597,25 @@ t.createSceneCommon  = function(screenGroup, floorLength, thisScene, notUsed, st
 
 	-- swiping area
 
-	if transitionData.isLeftHanded then
-		swiper = display.newRect(display.screenOriginX + 92, display.screenOriginY + 20, 200, 640 - display.screenOriginY) 
-	else
-		swiper = display.newRect(display.contentWidth - display.screenOriginX - 292, display.screenOriginY + 20, 200, 640 - display.screenOriginY) 
-	end
-
-	swiper:setFillColor(33, 33, 33)  
-	swiper.alpha = 0.01
+	swiper = utility.loadImage("circle200.png")
 	screenGroup:insert(swiper)
+	swiper:setReferencePoint(display.TopCenterReferencePoint)
+	swiper.alpha = 0.5
+	swiper.isVisible = false
 
-	local finger = utility.loadImage("finger.png") 
-	finger:translate(staticWink.x - 75, 220)
-	screenGroup:insert(finger)
-	fingerSpeed = 4
-	finger.isVisible = false
-	staticWink.finger = finger
+	angleText = utility.addBlackCentredText("", 25, screenGroup, 60)
+	speedText = utility.addBlackCentredText("", 75, screenGroup, 60)
+
+	if transitionData.isLeftHanded then
+		angleText:translate(30, 0)
+		speedText:translate(30, 0)
+		swiper:translate(display.screenOriginX + 100, display.screenOriginY + 370) 
+	else
+		swiper:translate(display.contentWidth - display.screenOriginX - 290, display.screenOriginY + 370) 
+	end
 
 	-- set the default wink as the active one
 	activeWink = wink
-
-	windIndicators = {}
-
-	local windIndicator1 = display.newRect(200, 400, 20, 2)
-	windIndicator1.isVisible = false
-	table.insert(windIndicators, windIndicator1)
-	screenGroup:insert(windIndicator1)
-
-	local windIndicator2 = display.newRect(470, 200, 20, 2)
-	windIndicator2.isVisible = false
-	table.insert(windIndicators, windIndicator2)
-	screenGroup:insert(windIndicator2)
-
-	local windIndicator3 = display.newRect(915, 300, 20, 2)
-	windIndicator3.isVisible = false
-	table.insert(windIndicators, windIndicator3)
-	screenGroup:insert(windIndicator3)
 
 	outOfBoundsText = display.newText("", display.contentWidth + 10 - display.screenOriginX, 50, "GoodDog", 75)
 	outOfBoundsText:setReferencePoint(display.TopCenterReferencePoint)
@@ -674,11 +628,6 @@ t.createSceneCommon  = function(screenGroup, floorLength, thisScene, notUsed, st
 	levelText:setTextColor(0,0,0)
 	screenGroup:insert(levelText)
 
-	trainingButton = utility.loadImage("training.png")
-	utility.centreObjectX(trainingButton)
-	trainingButton.y = 1000
-	screenGp:insert(trainingButton)
-
 	movingPlatformsX = {}
 	movingPlatformsY = {}
 	conveyerBelts = {}
@@ -688,7 +637,9 @@ t.createSceneCommon  = function(screenGroup, floorLength, thisScene, notUsed, st
 	flowers = {}
 	ants = {}
 
-	buttonsOn = false
+	nextButton = utility.loadImage("nextButton.png")
+	screenGroup:insert(nextButton)
+	nextButton.isVisible = false
 
 	createGenericOverlay(screenGroup)
 end
@@ -699,22 +650,6 @@ local function fadeLevelText(event)
 		levelText.alpha = levelText.alpha - 0.01
 	else
 		Runtime:removeEventListener( "enterFrame", fadeLevelText )
-	end
-end
-
-local function applyWindForce(event)
-	if windSpeed ~= 0 then
-		for i=1,#windIndicators do
-			local windIndicator = windIndicators[i]
-			if windIndicator.x > 1200 then
-				windIndicator.x = -200
-			elseif windIndicator.x < -200 then
-				windIndicator.x = 1200
-			end
-
-			windIndicator.x = windIndicator.x + (windSpeed * 100)
-			activeWink:applyForce(windSpeed, 0, wink.x, wink.y )
-		end
 	end
 end
 
@@ -921,10 +856,10 @@ local function checkClouds(event)
 				cloudPlatform.startSticky = event.time
 				print("starting cloud timer")
 
-			elseif cloudPlatform.startSticky ~= nil and cloudPlatform.startSticky < (event.time - 1300) then	
-				cloudPlatform.coverPic.y = cloudPlatform.coverPic.y + 5
-				cloudPlatform.platformBottom.y = cloudPlatform.platformBottom.y + 5
-				cloudPlatform.y = cloudPlatform.y + 5
+			elseif cloudPlatform.startSticky ~= nil and cloudPlatform.startSticky < (event.time - 2250) then	
+				cloudPlatform.coverPic.y = cloudPlatform.coverPic.y + 7
+				cloudPlatform.platformBottom.y = cloudPlatform.platformBottom.y + 7
+				cloudPlatform.y = cloudPlatform.y + 7
 
 				if (cloudPlatform.y > (display.contentHeight - display.screenOriginY + 30)) then
 					table.remove(clouds, i)
@@ -992,28 +927,20 @@ end
 local function showStaticWink(event)
 	if (outOfBounds or levelCompleted) then
 		staticWink.isVisible = false
-
-		if staticWink.finger then
-			staticWink.finger.isVisible = false
-		end
+		swiper.isVisible = false
 	else
 
-	local isStationary = isWinkStationary()
+		local isStationary = isWinkStationary()
 
-	if (isStationary and staticWink.isVisible == false) then
-		staticWink.isVisible = true
-
-		if staticWink.finger then
-			staticWink.finger.isVisible = true
-			staticWink.finger:toFront()
+		if (isStationary and staticWink.isVisible == false) then
+			staticWink.isVisible = true
+			swiper.isVisible = true
+			swiper.y = display.screenOriginY + 370
+			swiper:toFront()
+		elseif (isStationary == false and staticWink.isVisible) then
+			staticWink.isVisible = false
+			swiper.isVisible = false
 		end
-	elseif (isStationary == false and staticWink.isVisible) then
-		staticWink.isVisible = false
-
-		if staticWink.finger then
-			staticWink.finger.isVisible = false
-		end
-	end
 	end
 end
 
@@ -1032,87 +959,6 @@ local function moveAnts()
 			end
 		end
 	end
-end
-
--- add all the event listening
-t.enterSceneCommon = function()
-	print("entering scene common")
-	storyboard.purgeScene(transitionData.currentScene)
-	transitionData.currentScene = currentScene 
-	Runtime:addEventListener("enterFrame", fadeHelpText )
-	Runtime:addEventListener("enterFrame", t.trackWink)  
-	swiper:addEventListener("touch", t.drag) 
-	restartButton:addEventListener("touch", doRestart) 
-	menuButton:addEventListener("touch", goToMenu) 
-
-	if #movingPlatformsX ~= 0 or #movingPlatformsY ~= 0 or #conveyerBelts ~= 0 then
-		Runtime:addEventListener("enterFrame", movePlatforms)
-	end
-
-	Runtime:addEventListener( "collision", t.onLocalCollision )
-
-	if #clouds > 0 then
-		Runtime:addEventListener( "enterFrame", checkClouds )
-	end
-
-	if #cans > 0 then
-		Runtime:addEventListener( "enterFrame", checkCans )
-	end
-
-	if #wasps > 0 then
-		Runtime:addEventListener( "enterFrame", moveWasps )
-	end
-
-	if #ants > 0 then
-		Runtime:addEventListener( "enterFrame", moveAnts )
-	end
-
-	if windSpeed ~= 0 then
-		Runtime:addEventListener( "enterFrame", applyWindForce )
-	end
-
-	Runtime:addEventListener( "enterFrame", showStaticWink )
-	Runtime:addEventListener( "enterFrame", fadeLevelText )
-	Runtime:addEventListener( "enterFrame", moveFinger )
-
-	for i=1,#overlayObjects do
-		local overlay = overlayObjects[i]
-		overlay:toFront()
-	end
-
-	trainingButton:addEventListener("touch", goToTraining)
-end
-
-t.exitSceneCommon = function()
-	print("exiting scene common")
-	Runtime:removeEventListener("enterFrame", t.trackWink) 
-	swiper:removeEventListener("touch", t.drag) 
-	restartButton:removeEventListener("touch", doRestart)
-	menuButton:removeEventListener("touch", goToMenu)
-
-	Runtime:removeEventListener("enterFrame", movePlatforms)
-
-	Runtime:removeEventListener( "collision", t.onLocalCollision )
-
-	Runtime:removeEventListener( "enterFrame", checkClouds )
-	Runtime:removeEventListener( "enterFrame", checkCans )
-
-	Runtime:removeEventListener( "enterFrame", applyWindForce )
-
-	Runtime:removeEventListener( "enterFrame", moveWasps )
-
-	Runtime:removeEventListener( "enterFrame", showStaticWink )
-
-	Runtime:removeEventListener( "enterFrame", moveAnts )
-
-	Runtime:removeEventListener( "enterFrame", fadeLevelText )
-
-	trainingButton:removeEventListener("touch", goToTraining)
-	Runtime:removeEventListener("enterFrame", flashFlower)
-	Runtime:removeEventListener("enterFrame", moveOutOfBoundsText)
-	Runtime:removeEventListener( "enterFrame", moveFinger )
-	Runtime:removeEventListener("enterFrame", fadeHelpText )
-
 end
 
 t.addNewPlatform = function(platform, colour1, colour2, colour3, screenGroup, isBouncy)
@@ -1188,17 +1034,6 @@ t.addNewWhirlpool = function(whirlpool, otherWhirlpool)
 	whirlpool.otherWhirlpool = otherWhirlpool
 	whirlpool.name = "whirlpool"
 	whirlpool.collision = onLocalCollision
-end
-
-t.setWindSpeed = function(speed)
-	print("setting wind speed to " .. speed)
-
-	for i=1,#windIndicators do
-		windIndicators[i].isVisible = true
-	end
-
-	windSpeed = speed
-	--windSpeedText.text = windSpeed * 100 .. " wind speed"
 end
 
 t.createPlatform = function(xLocation, yLocation, coverY, coverColour, coverPic, screenGroup, platformLength)
@@ -1408,15 +1243,80 @@ t.addCobweb = function(screenGroup, xLocation, yLocation, coverY)
 	background:toBack()
 end
 
-t.addFinger = function(yOffset, screenGroup)
-	--local finger = utility.loadImage("finger.png") 
-	--finger:translate(staticWink.x - 35, staticWink.y - yOffset)
-	--screenGroup:insert(finger)
-	--fingerSpeed = 4
-	--fingerReset = finger.y
-	--finger.isVisible = false
-	--staticWink.finger = finger
-	--finger.shown = false
+-- add all the event listening
+t.enterSceneCommon = function()
+	print("entering scene common")
+	storyboard.purgeScene(transitionData.currentScene)
+	transitionData.currentScene = currentScene 
+	Runtime:addEventListener("enterFrame", fadeHelpText )
+	Runtime:addEventListener("enterFrame", t.trackWink)  
+	swiper:addEventListener("touch", t.drag) 
+	restartButton:addEventListener("touch", doRestart) 
+	menuButton:addEventListener("touch", goToMenu) 
+	nextButton:addEventListener("touch", goToNextPressed)
+
+	if #movingPlatformsX ~= 0 or #movingPlatformsY ~= 0 or #conveyerBelts ~= 0 then
+		Runtime:addEventListener("enterFrame", movePlatforms)
+	end
+
+	Runtime:addEventListener( "collision", t.onLocalCollision )
+
+	if #clouds > 0 then
+		Runtime:addEventListener( "enterFrame", checkClouds )
+	end
+
+	if #cans > 0 then
+		Runtime:addEventListener( "enterFrame", checkCans )
+	end
+
+	if #wasps > 0 then
+		Runtime:addEventListener( "enterFrame", moveWasps )
+	end
+
+	if #ants > 0 then
+		Runtime:addEventListener( "enterFrame", moveAnts )
+	end
+
+	Runtime:addEventListener( "enterFrame", showStaticWink )
+	Runtime:addEventListener( "enterFrame", fadeLevelText )
+
+	for i=1,#overlayObjects do
+		local overlay = overlayObjects[i]
+		overlay:toFront()
+	end
+
+	Runtime:addEventListener("enterFrame", fadeSpeedAndAngleText)
+
+end
+
+t.exitSceneCommon = function()
+	print("exiting scene common")
+	Runtime:removeEventListener("enterFrame", t.trackWink) 
+	swiper:removeEventListener("touch", t.drag) 
+	restartButton:removeEventListener("touch", doRestart)
+	menuButton:removeEventListener("touch", goToMenu)
+
+	Runtime:removeEventListener("enterFrame", movePlatforms)
+
+	Runtime:removeEventListener( "collision", t.onLocalCollision )
+
+	Runtime:removeEventListener( "enterFrame", checkClouds )
+	Runtime:removeEventListener( "enterFrame", checkCans )
+
+	Runtime:removeEventListener( "enterFrame", moveWasps )
+
+	Runtime:removeEventListener( "enterFrame", showStaticWink )
+
+	Runtime:removeEventListener( "enterFrame", moveAnts )
+
+	Runtime:removeEventListener( "enterFrame", fadeLevelText )
+
+	Runtime:removeEventListener("enterFrame", flashFlower)
+	Runtime:removeEventListener("enterFrame", moveOutOfBoundsText)
+	Runtime:removeEventListener("enterFrame", fadeHelpText )
+	Runtime:removeEventListener( "enterFrame", fadeSpeedAndAngleText )
+	nextButton:removeEventListener("touch", goToNextPressed)
+
 end
 
 return t
