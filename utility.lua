@@ -30,6 +30,7 @@ local transitionData = require "sceneTransitionData"
 local facebook = require "facebook"
 
 local starsStore = {}
+local playSounds = true
 
 function u.playSound(sound)
 	if playSounds == true then

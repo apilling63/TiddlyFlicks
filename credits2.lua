@@ -22,7 +22,7 @@ function scene:createScene(event)
 	local screenGroup = self.view
 	background = utility.addMenuBackground(screenGroup) 
 	utility.addBlackCentredText("SOUND EFFECTS - www.freesfx.co.uk", 160, screenGroup, 40)
-	utility.addBlackCentredText("GRAPHIC DESIGN  - Chris Locke - www.cornishlocky.co.uk", 100, screenGroup, 40)
+	utility.addBlackCentredText("GRAPHIC DESIGN  - Chris Lock - www.cornishlocky.co.uk", 100, screenGroup, 40)
 	utility.addBlackCentredText("GAME DESIGN AND CODING - Adam Pilling", 40, screenGroup, 40)
 	utility.addBlackCentredText("MENU MUSIC - Matt Johnson - www.newgrounds.com/audio/listen/268982", 220, screenGroup, 40)
 

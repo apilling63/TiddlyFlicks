@@ -246,7 +246,7 @@ function scene:enterScene(event)
 		native.showAlert( "Tiddly values your opinion", "Would you like to rate him?", { "Sure!", "Maybe later" }, doRateApp )
 	elseif myRevMob.isAdAvailable() then
 		print("not first scene")
-		native.showAlert( "FREE GAME FROM OUR PARTNER", "Would you like to try another cool free game?  This may take a few moments to connect", { "Sure!", "No thanks" }, goToGameLink )
+		--native.showAlert( "FREE GAME FROM OUR PARTNER", "Would you like to try another cool free game?  This may take a few moments to connect", { "Sure!", "No thanks" }, goToGameLink )
 	end
 
 	translations.setLanguage("en")

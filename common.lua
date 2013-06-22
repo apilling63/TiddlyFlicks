@@ -420,8 +420,8 @@ t.drag = function( event )
 		print("swipe detected")
 		swiper.y = event.y - 100
 
-		if (swiper.y < 30) then
-			swiper.y = 30
+		if (swiper.y < display.screenOriginY + 20) then
+			swiper.y = display.screenOriginY + 20
 		end
 
 		previousY = swiper.y
@@ -430,15 +430,20 @@ t.drag = function( event )
         	if "moved" == phase then  
 			swiper.y = event.y - 100
 
-			if (swiper.y < 30) then
-				swiper.y = 30
+			if (swiper.y < display.screenOriginY + 20) then
+				swiper.y = display.screenOriginY + 20
+				angle = 0
 			end
 
-			if (previousY > swiper.y and swiper.y <= 275 and swiper.y > 29) then
+			if (previousY > swiper.y and swiper.y <= (display.screenOriginY + 265) and swiper.y > (display.screenOriginY + 19.99)) then
 				-- moving up inside the angle zone
 				angleText.text = string.sub(angle, 1, 4) .. "º"
 				angleText.alpha = 1
-				angle = 90 * (previousY - 30) / 245
+				angle = 90 * (previousY - (display.screenOriginY + 20)) / 245
+
+				if angle > 90 then
+					angle = 90
+				end
 				dragStartY = previousY
 			elseif angle ~= 180 and dragStartY ~= 0 then
 				getSpeed(dragStartY, swiper.y)
@@ -555,6 +560,8 @@ local function createGenericOverlay(screenGroup)
 	table.insert(overlayObjects, restartButton)
 	table.insert(overlayObjects, menuButton)
 	table.insert(overlayObjects, staticWink)
+	table.insert(overlayObjects, angleText)
+	table.insert(overlayObjects, speedText)
 end
 
 -- what to do when the screen loads
@@ -588,7 +595,6 @@ t.createSceneCommon  = function(screenGroup, floorLength, thisScene, notUsed, st
 	-- picture of the wink to swipe
 	staticWink = utility.addStaticWink(screenGroup, transitionData.isLeftHanded)
 	staticWink.isVisible = false
-	staticWink.alpha = 0.8
 
 	-- default wink (we always need one)
 	wink = utility.loadImage("orangeWink.png")  
