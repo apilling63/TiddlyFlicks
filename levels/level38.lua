@@ -9,6 +9,7 @@ local storyboard = require "storyboard"
 local scene = storyboard.newScene()
 local common = require ("common")
 local utility = require ("utility")
+local translations = require ("translations")
 
 -- what to do when the screen loads
 function scene:createScene(event)
@@ -16,7 +17,7 @@ function scene:createScene(event)
 	common.createSceneCommon(screenGroup, 800, "level38", "level39", storyboard, true)
 	local wasp = utility.addWasp(screenGroup, 400, 500)
 	common.moveWasp(wasp, 300, 450, 500, 570)
-	common.setHelpText("TIP: Wasps hurt - avoid them", "")
+	common.setHelpText(translations.getPhrase("TIP 4A"), "")
 end
 
 -- add all the event listening

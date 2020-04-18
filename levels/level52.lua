@@ -9,6 +9,7 @@ local storyboard = require "storyboard"
 local scene = storyboard.newScene()
 local common = require ("common")
 local utility = require ("utility")
+local translations = require ("translations")
 
 -- what to do when the screen loads
 function scene:createScene(event)
@@ -17,7 +18,7 @@ function scene:createScene(event)
 	common.createSceneCommon(screenGroup, 880, "level52", "level53", storyboard)
 	local colour = {0,0,0}
 	common.addHoop(350, 520, 580, colour, screenGroup)
-	common.setHelpText("TIP: Tiddly needs to interact with objects", "to remove covers from the target pot")
+	common.setHelpText(translations.getPhrase("TIP 6A"), translations.getPhrase("TIP 6B"))
 end
 
 -- add all the event listening

@@ -9,13 +9,14 @@ local storyboard = require "storyboard"
 local scene = storyboard.newScene()
 local common = require ("common")
 local utility = require ("utility")
+local translations = require ("translations")
 
 -- what to do when the screen loads
 function scene:createScene(event)
 	screenGroup = self.view
 	common.createSceneCommon(screenGroup, 800, "level71", "level24", storyboard, true)
 	utility.addWood(200, -275, screenGroup)
-	common.setHelpText("TIP: Flick down from the top ", "of the face for a shallow trajectory")
+	common.setHelpText(translations.getPhrase("TIP 3A"), translations.getPhrase("TIP 3B"))
 
 end
 

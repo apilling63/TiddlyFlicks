@@ -13,7 +13,7 @@ settings = {
                         UIAppFonts = {
                                	"GoodDog.otf"
                         },
-			MinimumOSVersion="4.3.0",
+			MinimumOSVersion="5.1.1",
 			FacebookAppID = "151025625078894",
              		CFBundleIconFile = "Icon.png",
              		CFBundleIconFiles = {

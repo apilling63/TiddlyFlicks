@@ -31,15 +31,28 @@ local backgroundNoise = audio.loadSound("sounds/menu_music.mp3")
 
 local function doPlay(event)
 	if "began" == event.phase then
-		transitionData.nextScene = "levelsScene"
-		transitionData.numLives = numLives
-		playButton:setFillColor(255, 255, 0)
 
-		local closure = function()
-			storyboard.gotoScene( "levelsScene") 
+		if utility.hasSeenHowTo() then
+			transitionData.nextScene = "levelsScene"
+			transitionData.numLives = numLives
+			playButton:setFillColor(255, 255, 0)
+
+			local closure = function()
+				storyboard.gotoScene( "levelsScene") 
+			end
+
+			timer.performWithDelay(50, closure)
+		else
+			transitionData.nextScene = "howToPlay1"
+			transitionData.numLives = numLives
+			playButton:setFillColor(255, 255, 0)
+
+			local closure = function()
+				storyboard.gotoScene( "howToPlay1") 
+			end
+
+			timer.performWithDelay(50, closure)
 		end
-
-		timer.performWithDelay(50, closure)
 	end
 end
 
@@ -219,6 +232,8 @@ local function goToAchievements(event)
 end
 
 function scene:enterScene(event)
+	translations.setLanguage("en")
+
 	storyboard.purgeScene(transitionData.currentScene)
 	playButton:addEventListener("touch", doPlay)
 	transitionData.currentScene = "menu1"
@@ -242,14 +257,19 @@ function scene:enterScene(event)
 	end
 
 	if transitionData.firstScene then
+		print("hello!!!")
 		transitionData.firstScene = false
-		native.showAlert( "Tiddly values your opinion", "Would you like to rate him?", { "Sure!", "Maybe later" }, doRateApp )
+		local promptText = translations.getPhrase("RATE")
+		local promptTitle = translations.getPhrase("OPINION")
+		local button1Text = translations.getPhrase("SURE")
+		local button2Text = translations.getPhrase("MAYBE LATER")
+
+		native.showAlert( promptTitle, promptText, { button1Text, button2Text }, doRateApp )
 	elseif myRevMob.isAdAvailable() then
 		print("not first scene")
 		--native.showAlert( "FREE GAME FROM OUR PARTNER", "Would you like to try another cool free game?  This may take a few moments to connect", { "Sure!", "No thanks" }, goToGameLink )
 	end
 
-	translations.setLanguage("en")
 end
 
 function scene:exitScene(event)

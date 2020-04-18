@@ -23,6 +23,7 @@ local endTimer
 local timerText
 local unlocked1 = false
 local unlocked2 = false
+local unlockText
 
 local gameNoise = audio.loadSound("sounds/country_sounds.mp3")
 
@@ -71,6 +72,7 @@ local function goToPrevious(event)
 			previousButton.isVisible = false
 			timerText.text = translations.getPhrase("Escape from the Country")
 			lock.isVisible = false
+			unlockText.isVisible = false
 		elseif previousButton.isVisible then
 			nextButton.isVisible = true
 			timerText.text = translations.getPhrase("Escape from the Country") .. " 2"
@@ -78,6 +80,7 @@ local function goToPrevious(event)
 
 			if unlocked1 == false then
 				lock.isVisible = true
+				unlockText.isVisible = true
 			end
 		end
 	end
@@ -102,6 +105,8 @@ local function goToNext(event)
 			timerText.text = translations.getPhrase("Escape from the Moon")
 			comingSoonText.isVisible = true
 			lock.isVisible = false
+			unlockText.isVisible = false
+
 		elseif nextButton.isVisible then
 			previousButton.isVisible = true
 			timerText.text = translations.getPhrase("Escape from the Country") .. " 2"
@@ -109,6 +114,7 @@ local function goToNext(event)
 			if unlocked1 == false then
 				print("making lock visible")
 				lock.isVisible = true
+				unlockText.isVisible = true
 			end
 		end
 	end
@@ -236,6 +242,11 @@ function scene:createScene(event)
 	lock:translate(0, 110)
 	screenGroup:insert(lock)
 	lock.isVisible = false
+
+	unlockText = display.newText(translations.getPhrase("CLICK TO UNLOCK"), 0, 375, "GoodDog", 50)
+	utility.centreObjectX(unlockText)
+	unlockText.isVisible = false
+	screenGroup:insert(unlockText)
 
 	comingSoonText = display.newText(translations.getPhrase("COMING SOON"), 0, 125, "GoodDog", 180)
 	comingSoonText:setTextColor(255,255,0)

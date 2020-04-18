@@ -4,7 +4,7 @@ application = {
 		height = 960, 
 		scale = "letterBox",
 		fps = 60,
-		
+	 graphicsCompatibility = 1,	
 		
         	imageSuffix = {
             		["@2x"] = 1.5,

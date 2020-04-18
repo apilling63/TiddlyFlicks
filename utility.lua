@@ -409,7 +409,7 @@ local function fblistener( event )
 end
 
 u.initialise = function()
-
+	--u.unlock1()
 	local foundZero = false
 
 	for i = 1, 96 do 
@@ -430,7 +430,7 @@ u.initialise = function()
 		starsStore[i] = currentStars
 	end
 
-	facebook.login( "151025625078894", fblistener, {"publish_stream"} )
+	--facebook.login( "151025625078894", fblistener, {"publish_stream"} )
 end
 
 u.getStarsForLevelIndex = function(index)
@@ -694,6 +694,14 @@ function u.willPlaySounds()
 
 	return playSounds
 
+end
+
+function u.hasSeenHowTo()
+	return getBooleanValue("hasSeenHowTo")
+end
+
+function u.setHasSeenHowTo()
+	persistent.saveModule("hasSeenHowTo", true)
 end
 
 return u

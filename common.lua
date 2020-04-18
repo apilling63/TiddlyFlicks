@@ -15,6 +15,8 @@ local math = require "math"
 local training = require "training"
 local levelMappings = require "levelMappings"
 local json = require("json")
+local myRevMob = require "myRevMob"
+local translations = require "translations"
 
 local t = {}
 local transitionData = require "sceneTransitionData"
@@ -28,6 +30,8 @@ local storyboard
 local waitingToRestart = 0
 local numFlicks = 0
 local clinkSound = audio.loadSound("sounds/bounce.mp3")
+local yes = audio.loadSound("sounds/yes.mp3")
+local applause = audio.loadSound("sounds/applause.mp3") 
 local yes = audio.loadSound("sounds/yes.mp3")
 local applause = audio.loadSound("sounds/applause.mp3")
 
@@ -178,7 +182,7 @@ local function moveOutOfBoundsText()
 				menuButton.y = 500
 				menuButton:toFront()
 
-				local backToStartText = display.newText("Tiddly must head back to the start", 0, 250, "GoodDog", 60)
+				local backToStartText = display.newText(translations.getPhrase("RESTART"), 0, 250, "GoodDog", 60)
 				utility.centreObjectX(backToStartText)
 				screenGp:insert(backToStartText)
 			end
@@ -239,17 +243,17 @@ end
 
 local function hitWasp()
 	utility.playSound(ouch)
-	hitHazard("TIDDLY GOT STUNG!!")
+	hitHazard(translations.getPhrase("STUNG"))
 end
 
 local function hitBolt()
 	utility.playSound(ouch)
-	hitHazard("TIDDLY GOT SHOCKED!!")
+	hitHazard(translations.getPhrase("SHOCK"))
 end
 
 local function goneOutOfBounds()
 	utility.playSound(ohNo)
-	hitHazard("OUT OF BOUNDS!!")
+	hitHazard(translations.getPhrase("OUT OF BOUNDS"))
 end
 
 local function insertStars()
@@ -268,7 +272,7 @@ local function levelComplete()
 	utility.playSound(yes)
 	utility.playSound(applause)
 
-	outOfBoundsText.text = "A TIDDLY TRIUMPH!!"
+	outOfBoundsText.text = translations.getPhrase("TRIUMPH")
 	levelCompleted = true
 
 	local hasAchieved2 = levelChangeCommon()
@@ -294,14 +298,24 @@ local function levelComplete()
 	timer.performWithDelay(2600, addStarThree)
 
 	local closure = function()
-		local goToNextText = display.newText("Have a go at the next level!", 0, 350, "GoodDog", 60)
+		if myRevMob.isFSAvailable() then
+			local ad = myRevMob.getFS()
+			ad:show()
+		end
+
+		local goToNextText = display.newText(translations.getPhrase("HAVE A GO"), 0, 350, "GoodDog", 60)
 		utility.centreObjectX(goToNextText)
 		screenGp:insert(goToNextText)
 		utility.playSound(ding)
 			
 		if levelIndex == 32 and utility.hasUnlocked1() == false then
 			utility.playSound(applause)
-			native.showAlert( "TIDDLY MASTER!!", "Congratulations upon completing the first 32 levels of Tiddly Flicks Escape from the Country - you're a true Tiddly Master! Continue the fun by unlocking some more levels", { "Unlock", "Maybe later" }, unlock1 )
+			local alertTitle = translations.getPhrase("MASTER")
+			local alertText = translations.getPhrase("CONGRATS UNLOCK")
+			local unlockText = translations.getPhrase("UNLOCK")
+			local button2Text = translations.getPhrase("MAYBE LATER")
+
+			native.showAlert( alertTitle, alertText, { unlockText, button2Text }, unlock1 )
 		else
 			if levelIndex % 4 == 0 and utility.hasPosted(levelIndex) == false then
                 		--utility.postToFacebook("I just completed level " .. levelIndex .. " on Tiddly Flicks", levelIndex)
@@ -628,7 +642,7 @@ t.createSceneCommon  = function(screenGroup, floorLength, thisScene, notUsed, st
 	outOfBoundsText:setTextColor(0,0,0)
 	screenGroup:insert(outOfBoundsText)
 
-	levelText = display.newText("LEVEL " .. levelIndex, 0, 0, "GoodDog", 100)
+	levelText = display.newText(translations.getPhrase("LEVEL") .. levelIndex, 0, 0, "GoodDog", 100)
 	utility.centreObjectX(levelText)
 	levelText.y = 250
 	levelText:setTextColor(0,0,0)

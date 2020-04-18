@@ -9,6 +9,7 @@ local storyboard = require "storyboard"
 local scene = storyboard.newScene()
 local common = require ("common")
 local utility = require ("utility")
+local translations = require ("translations")
 
 -- what to do when the screen loads
 function scene:createScene(event)
@@ -18,7 +19,7 @@ function scene:createScene(event)
 	local barrier = utility.addWood(250, 450, screenGroup)
 	barrier:toBack()
 	background:toBack()
-	common.setHelpText("TIP: Flick down from the bottom of", "the face for a steep trajectory")
+	common.setHelpText(translations.getPhrase("TIP 2A"), translations.getPhrase("TIP 2B"))
 
 end
 

@@ -14,6 +14,7 @@ local result = 0
 local testMode = 0
 local storyboard = require "storyboard"
 local callbackUponSuccessfulPurchase
+local translations = require "translations"
 
 local listOfProducts = 
 {
@@ -46,50 +47,69 @@ end
 
 local function transactionCallback( event )
 
-	if testMode > 0 then
-		result = testMode
-		native.showAlert( "Purchase", "The purchase was successful", { "OK" }, uponClearingSuccessMessage)
-		return
+	local transaction = {}
+
+	if testMode == 0 then
+		transaction = event.transaction
 	end
 
-    local transaction = event.transaction
-
-    if transaction.state == "purchased" then
+    if testMode == 1 or transaction.state == "purchased" then
         print("Transaction successful!")
-        print("productIdentifier", transaction.productIdentifier)
-        print("receipt", transaction.receipt)
-        print("transactionIdentifier", transaction.identifier)
-        print("date", transaction.date)
-	native.showAlert( "Purchase", "The purchase was successful", { "OK" }, uponClearingSuccessMessage)
 
-	doPersistAfterPurchase(transaction.productIdentifier)
+	if testMode == 0 then
+        	print("productIdentifier", transaction.productIdentifier)
+	        print("receipt", transaction.receipt)
+	        print("transactionIdentifier", transaction.identifier)
+        	print("date", transaction.date)
+	end
+
+	local alertText = translations.getPhrase("IAP SUCCESS")
+	local alertTitle = translations.getPhrase("PURCHASE")
+
+	native.showAlert( alertTitle, alertText, { "OK" }, uponClearingSuccessMessage)
+
+	if testMode == 0 then
+		doPersistAfterPurchase(transaction.productIdentifier)
+	end
+
 	result = 1
-    elseif  transaction.state == "restored" then
+    elseif testMode == 2 or transaction.state == "restored" then
         print("Transaction restored (from previous session)")
-        print("productIdentifier", transaction.productIdentifier)
-        print("receipt", transaction.receipt)
-        print("transactionIdentifier", transaction.identifier)
-        print("date", transaction.date)
-        print("originalReceipt", transaction.originalReceipt)
-        print("originalTransactionIdentifier", transaction.originalIdentifier)
-        print("originalDate", transaction.originalDate)
+	if testMode == 0 then
+	        print("productIdentifier", transaction.productIdentifier)
+        	print("receipt", transaction.receipt)
+	        print("transactionIdentifier", transaction.identifier)
+        	print("date", transaction.date)
+	        print("originalReceipt", transaction.originalReceipt)
+        	print("originalTransactionIdentifier", transaction.originalIdentifier)
+	        print("originalDate", transaction.originalDate)
+	end
 	result = 1
-	native.showAlert( "Purchase", "Purchases have been restored", { "OK" })
+	--native.showAlert( "Purchase", "Purchases have been restored", { "OK" })
 
-    elseif transaction.state == "cancelled" then
+    elseif testMode == 3 or transaction.state == "cancelled" then
         print("User cancelled transaction")
-	native.showAlert( "Purchase", "The purchase was cancelled, you will not be charged", { "OK" })
+	local alertText = translations.getPhrase("IAP CANCELLED")
+	local alertTitle = translations.getPhrase("PURCHASE")
+
+	native.showAlert( alertTitle, alertText, { "OK" })
 	result = 4
-    elseif transaction.state == "failed" then
-	native.showAlert( "Purchase", "The purchase failed, you will not be charged", { "OK" })
+    elseif testMode == 4 or transaction.state == "failed" then
+	local alertText = translations.getPhrase("IAP FAILED")
+	local alertTitle = translations.getPhrase("PURCHASE")
+
+	native.showAlert( alertTitle, alertText, { "OK" })
         print("Transaction failed, type:", transaction.errorType, transaction.errorString)
 	result = 4
-    elseif transaction.state == "refunded" then
-	native.showAlert( "Purchase", "A previous purchase was refunded", { "OK" })
+    elseif testMode == 5 or transaction.state == "refunded" then
+	--native.showAlert( "Purchase", "A previous purchase was refunded", { "OK" })
 	result = 4
         print("unknown event")
     else
-	native.showAlert( "Purchase", "The purchase did not succeed, you will not be charged", { "OK" })
+	local alertText = translations.getPhrase("IAP DID NOT SUCCEED")
+	local alertTitle = translations.getPhrase("PURCHASE")
+
+	native.showAlert( alertTitle, alertText, { "OK" })
 	result = 4
         print("unknown event")
     end
@@ -98,8 +118,10 @@ local function transactionCallback( event )
     -- we are done with the transaction.
     -- If you are providing downloadable content, wait to call this until
     -- after the download completes.
-    store.finishTransaction( transaction )
 
+	if testMode == 0 then
+	    store.finishTransaction( transaction )
+	end
 end
 
 t.purchase = function(itemToBuyIndex, callbackUponSuccess)
@@ -112,17 +134,22 @@ t.purchase = function(itemToBuyIndex, callbackUponSuccess)
 
 		if testMode > 0 then
 			transactionCallback()
-			doPersistAfterPurchase(listOfProducts[itemToBuyIndex])
 		else 
 			store.purchase({listOfProducts[itemToBuyIndex]})
 		end
 	elseif initialised == 3 then
 		print("cannot purchase")
-		native.showAlert( "Sorry", "You can't make purchases on this system", { "OK" })
+		local alertText = translations.getPhrase("SYSTEM IAP")
+		local alertTitle = translations.getPhrase("SORRY")
+
+		native.showAlert( alertTitle, alertText, { "OK" })
 		result = 3
 
 	elseif initialised == 2 then
-		native.showAlert( "Sorry", "In app purchases not supported on this system or device. Please activate purchases and try again via the levels page", { "OK" })
+		local alertText = translations.getPhrase("DEVICE NO IAP")
+		local alertTitle = translations.getPhrase("SORRY")
+
+		native.showAlert( alertTitle, alertText, { "OK" })
 	end
 	
 	return result
@@ -132,7 +159,7 @@ end
 
 t.initialise = function(test)
 	if test > 0 then
-		native.showAlert( "In store test mode", { "OK" })
+		native.showAlert( "TEST", "In store test mode", { "OK" })
 		print("IN TEST MODE")
 		initialised = 1
 		testMode = test

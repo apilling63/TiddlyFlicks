@@ -12,6 +12,7 @@ local transitionData = require "sceneTransitionData"
 local utility = require "utility"
 local physics = require "physics"
 local boing = audio.loadSound("sounds/boing.mp3")
+local translations = require "translations"
 
 local visible = 0
 local textBox
@@ -61,14 +62,16 @@ function scene:createScene(event)
 	utility.centreObjectX(speechBubble)
 	speechBubble:translate(0, 200)
 
-	textBox = utility.addBlackCentredText("Hi there!", 285, screenGroup, 45)
-	textBox2 = utility.addBlackCentredText("I'm Tiddly and I need your help", 360, screenGroup, 45)
+	textBox = utility.addBlackCentredText(translations.getPhrase("HOW TO 1"), 285, screenGroup, 45)
+	textBox2 = utility.addBlackCentredText(translations.getPhrase("HOW TO 2"), 360, screenGroup, 45)
 
 	tiddlyLabel = display.newText("TIDDLY", wink.x - 50, wink.y, "GoodDog", 50)
 	tiddlyLabel:setTextColor(0,0,0)
 	screenGroup:insert(tiddlyLabel)
 
-	potLabel = display.newText("POT", potFront.x - 30, potFront.y - 170, "GoodDog", 50)
+	local potText = translations.getPhrase("HOW TO POT")
+
+	potLabel = display.newText(potText, potFront.x - 30, potFront.y - 170, "GoodDog", 50)
 	potLabel:setTextColor(0,0,0)
 	screenGroup:insert(potLabel)
 
@@ -130,12 +133,12 @@ local function click()
 	--if "began" == phase then  
 
 		if visible == 0 then
-			textBox.text = "Use your skill to get me"
-			textBox2.text = "into the pot on each level" 
+			textBox.text = translations.getPhrase("HOW TO 3")
+			textBox2.text = translations.getPhrase("HOW TO 4")
 			visible = 1
 		elseif visible == 1 then
-			textBox.text = "When I'm stationary you can use"
-			textBox2.text = "the flicker to flick me forward" 
+			textBox.text = translations.getPhrase("HOW TO 5")
+			textBox2.text = translations.getPhrase("HOW TO 6")
 			visible = 2
 		elseif visible == 2 then
 			tiddlyLabel:toBack()
@@ -147,8 +150,8 @@ local function click()
 			speechBubble:toFront()
 			textBox:toFront()
 			textBox2:toFront()
-			textBox.text = "The upward motion determines trajectory." 
-			textBox2.text = "The bottom of my face gives a steep flick" 
+			textBox.text = translations.getPhrase("HOW TO 7") 
+			textBox2.text = translations.getPhrase("HOW TO 8") 
 			finger.y = fingerReset + 100
 			fingerReset = fingerReset + 100
 			visible = 4
@@ -160,7 +163,9 @@ local function click()
 			moveTiddlyToStartPosition()
 			speechBubble:toFront()
 			textBox:toFront()
-			textBox.text = "The top of my face gives a shallow flick" 
+			textBox2:toFront()
+			textBox.text = translations.getPhrase("HOW TO 9") 
+			textBox2.text = translations.getPhrase("HOW TO 10") 
 			finger.y = fingerReset - 170
 			fingerReset = fingerReset - 170
 			visible = 6
@@ -172,8 +177,8 @@ local function click()
 			speechBubble:toFront()
 			textBox:toFront()
 			textBox2:toFront()
-			textBox.text = "The downward motion determines distance" 
-			textBox2.text = "The further you go the further the flick" 
+			textBox.text = translations.getPhrase("HOW TO 11") 
+			textBox2.text = translations.getPhrase("HOW TO 12")  
 			finger.y = fingerReset + 70
 			fingerReset = fingerReset + 70
 			swipeLength = 350
@@ -187,11 +192,17 @@ local function click()
 			speechBubble:toFront()
 			textBox:toFront()
 			textBox2:toFront()
-			textBox.text = "And please watch out for dangers!"
-			textBox2.text = "Let's go!"
+			textBox.text = translations.getPhrase("HOW TO 13") 
+			textBox2.text = translations.getPhrase("HOW TO 14") 
 		elseif visible == 10 then
 			visible = 0
-			storyboard.gotoScene("menu1") 
+
+			if utility.hasSeenHowTo() then
+				storyboard.gotoScene("menu1") 
+			else
+				storyboard.gotoScene("levelsScene")
+				utility.setHasSeenHowTo()
+			end
 		end
 
 		if visible ~= 0 then

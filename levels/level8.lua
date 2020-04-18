@@ -9,6 +9,7 @@ local storyboard = require "storyboard"
 local scene = storyboard.newScene()
 local common = require ("common")
 local utility = require ("utility")
+local translations = require ("translations")
 
 -- what to do when the screen loads
 function scene:createScene(event)
@@ -19,7 +20,7 @@ function scene:createScene(event)
 
 	local colour = {255, 255, 0}
 	common.addFlower(220, 350, 920, 400, colour, screenGroup)
-	common.setHelpText("TIP: The centre of flowers have", "special powers")
+	common.setHelpText(translations.getPhrase("TIP 5A"), translations.getPhrase("TIP 5B"))
 end
 
 
